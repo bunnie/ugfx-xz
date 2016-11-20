@@ -1,13 +1,42 @@
-docs/html
-build
-.build
-.dep
-.cproject
-.project
-*.sublime*
-*.stackdump
-*.lst
+# Object files
 *.o
+*.ko
+*.obj
+*.elf
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Libraries
+*.lib
+*.a
+*.la
+*.lo
+
+# Shared objects (inc. Windows DLLs)
+*.dll
+*.so
+*.so.*
+*.dylib
+
+# Executables
+*.exe
+*.out
+*.app
+*.i*86
+*.x86_64
+*.hex
+
+# Debug files
+*.dSYM/
+*.su
+
+*.lst
+*.list
+*.srec
 *.map
-src/gdisp/fonts/*.dat
-docs/html.zip
+*.d
+
+# emacs files
+*~
