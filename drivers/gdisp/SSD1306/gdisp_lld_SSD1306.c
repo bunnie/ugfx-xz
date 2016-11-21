@@ -64,6 +64,7 @@
 /* Driver exported functions.                                                */
 /*===========================================================================*/
 
+#define SSD1306_INT_VCC 1
 /**
  * As this controller can't update on a pixel boundary we need to maintain the
  * the entire display surface in memory so that we can do the necessary bit
@@ -100,25 +101,44 @@ LLDSPEC bool_t gdisp_lld_init(GDisplay *g) {
 	write_cmd(g, SSD1306_DISPLAYOFF);
 	write_cmd2(g, SSD1306_SETDISPLAYCLOCKDIV, 0x80);
 	write_cmd2(g, SSD1306_SETMULTIPLEX, GDISP_SCREEN_HEIGHT-1);
-	write_cmd2(g, SSD1306_SETPRECHARGE, 0x1F);
 	write_cmd2(g, SSD1306_SETDISPLAYOFFSET, 0);
 	write_cmd(g, SSD1306_SETSTARTLINE | 0);
+
+#if SSD1306_INT_VCC
 	write_cmd2(g, SSD1306_ENABLE_CHARGE_PUMP, 0x14);
-	write_cmd2(g, SSD1306_MEMORYMODE, 0);
+#else
+	write_cmd2(g, SSD1306_ENABLE_CHARGE_PUMP, 0x10);
+#endif
+	
 	write_cmd(g, SSD1306_COLSCANDEC);
 	write_cmd(g, SSD1306_ROWSCANDEC);
+	
 	#if GDISP_SCREEN_HEIGHT == 64
 		write_cmd2(g, SSD1306_SETCOMPINS, 0x12);
 	#else
 		write_cmd2(g, SSD1306_SETCOMPINS, 0x22);
+		#error "shouldn't get here"
 	#endif
-	write_cmd2(g, SSD1306_SETCONTRAST, (uint8_t)(GDISP_INITIAL_CONTRAST*256/101));	// Set initial contrast.
-	write_cmd2(g, SSD1306_SETVCOMDETECT, 0x10);
-	write_cmd(g, SSD1306_DISPLAYON);
+
+		//	write_cmd2(g, SSD1306_SETCONTRAST, (uint8_t)(GDISP_INITIAL_CONTRAST*256/101));	// Set initial contrast.
+	write_cmd2(g, SSD1306_SETCONTRAST, 0xFF);
+#if SSD1306_INT_VCC
+	write_cmd2(g, SSD1306_SETPRECHARGE, 0xF1);
+#else
+	write_cmd2(g, SSD1306_SETPRECHARGE, 0x22);
+#endif
+	write_cmd2(g, SSD1306_SETVCOMDETECT, 0x40);
+
+	write_cmd(g, SSD1306_DISPLAYALLON_RESUME);
 	write_cmd(g, SSD1306_NORMALDISPLAY);
+
+	write_cmd2(g, SSD1306_MEMORYMODE, 0);
+	
 	write_cmd3(g, SSD1306_HV_COLUMN_ADDRESS, 0, GDISP_SCREEN_WIDTH-1);
 	write_cmd3(g, SSD1306_HV_PAGE_ADDRESS, 0, GDISP_SCREEN_HEIGHT/8-1);
 
+	write_cmd(g, SSD1306_DISPLAYON);
+	
     // Finish Init
     post_init_board(g);
 
@@ -150,7 +170,7 @@ LLDSPEC bool_t gdisp_lld_init(GDisplay *g) {
 		write_cmd(g, SSD1306_SETSTARTLINE | 0);
 
 		while (pages--) {
-			#if SSD1306_SH1106
+			#ifdef SSD1306_SH1106
 				write_cmd(g, SSD1306_PAM_PAGE_START + (7 - pages));
 				write_cmd(g, SSD1306_SETLOWCOLUMN + 2);
 				write_cmd(g, SSD1306_SETHIGHCOLUMN);
